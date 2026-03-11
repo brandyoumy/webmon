@@ -21,7 +21,12 @@ class UsersResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
-    protected static ?string $recordTitleAttribute = 'Users';
+    protected static ?string $recordTitleAttribute = 'username';
+
+    public static function isGloballySearchable(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -48,4 +53,6 @@ class UsersResource extends Resource
             'edit' => EditUsers::route('/{record}/edit'),
         ];
     }
+
+    
 }

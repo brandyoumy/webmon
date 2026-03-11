@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Helper\CustomLogin;
+use App\Filament\Widgets\LatestSSL;
+use App\Filament\Widgets\LatestStatus;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use DiogoGPinto\AuthUIEnhancer\Pages\Auth\AuthUiEnhancerLogin;
 use Filament\Http\Middleware\Authenticate;
@@ -21,6 +23,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Andreia\FilamentNordTheme\FilamentNordThemePlugin;
+
 
 class AppPanelProvider extends PanelProvider
 {
@@ -38,6 +42,7 @@ class AppPanelProvider extends PanelProvider
                 ->emptyPanelBackgroundImageOpacity('80%')
                 ->emptyPanelBackgroundImageUrl(asset('img/bg_webmon.jpg'))
             ])
+            ->plugin(FilamentNordThemePlugin::make())
             ->sidebarCollapsibleOnDesktop()
             ->login(CustomLogin::class)
             ->colors([
@@ -50,6 +55,8 @@ class AppPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                LatestStatus::class,
+                LatestSSL::class
                 // AccountWidget::class,
                 // FilamentInfoWidget::class,
             ])
@@ -68,4 +75,5 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
             ]);
     }
+  
 }
