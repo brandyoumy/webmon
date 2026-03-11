@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Users\Pages;
+namespace App\Filament\Resources\Websites\Pages;
 
-use App\Filament\Resources\Users\UsersResource;
+use App\Filament\Resources\Websites\WebsitesResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditUsers extends EditRecord
+class EditWebsites extends EditRecord
 {
-    protected static string $resource = UsersResource::class;
+    protected static string $resource = WebsitesResource::class;
 
     protected function getHeaderActions(): array
     {
