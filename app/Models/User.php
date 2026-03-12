@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'access_level'
     ];
 
     /**
@@ -46,4 +47,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function isAdmin() :bool
+    {
+        return $this->access_level == 'admin';
+    }
+
+
 }

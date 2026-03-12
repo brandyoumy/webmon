@@ -7,6 +7,7 @@ use App\Filament\Widgets\LatestSSL;
 use App\Filament\Widgets\LatestStatus;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use DiogoGPinto\AuthUIEnhancer\Pages\Auth\AuthUiEnhancerLogin;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +35,7 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('/')
+            ->defaultThemeMode(ThemeMode::Dark)
             ->viteTheme('resources/css/filament/app/theme.css')
             ->plugins([
                 AuthUIEnhancerPlugin::make()
@@ -42,6 +44,8 @@ class AppPanelProvider extends PanelProvider
                 ->emptyPanelBackgroundImageOpacity('80%')
                 ->emptyPanelBackgroundImageUrl(asset('img/bg_webmon.jpg'))
             ])
+            ->favicon(asset('img/webmonicon.PNG'))
+            ->brandName('Web Monitoring (Webmon)')
             ->plugin(FilamentNordThemePlugin::make())
             ->sidebarCollapsibleOnDesktop()
             ->login(CustomLogin::class)

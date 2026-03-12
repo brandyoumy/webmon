@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class UsersResource extends Resource
 {
@@ -53,6 +54,31 @@ class UsersResource extends Resource
             'edit' => EditUsers::route('/{record}/edit'),
         ];
     }
+
+    // Authentication
+    public static function canViewAny() : bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canCreate() : bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+    public static function canEdit(Model $record) : bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+    public static function canDelete(Model $record) : bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+    public static function  shouldRegisterNavigation() : bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    
 
     
 }

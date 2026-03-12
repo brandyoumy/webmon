@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -17,10 +18,15 @@ class UsersForm
                 TextInput::make('password')
                 ->label('Password')
                 ->password()
+                ->revealable()
                 ->required(fn ($context) => $context === 'create')
                 ->dehydrated(fn ($state) => filled($state)),
                 TextInput::make('name')->label('Full Name')->required(),
-                TextInput::make('email')->email()->label("Email")->required()
+                TextInput::make('email')->email()->label("Email")->required(),
+                Select::make('access_level')->label('Roles')->options([
+                    'user' => 'User',
+                    'admin' => 'Admin',
+                ])->default('user')->required()
             ]);
     }
 }
