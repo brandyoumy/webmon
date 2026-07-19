@@ -1,13 +1,3 @@
-FROM node:22-alpine AS assets
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
 FROM php:8.3-cli AS vendor
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -35,6 +25,17 @@ RUN composer install \
     --optimize-autoloader \
     --no-interaction \
     --no-progress
+
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+RUN npm run build
 
 FROM php:8.3-apache
 
