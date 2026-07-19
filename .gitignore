@@ -27,3 +27,4 @@ php.ini
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/public/database_dump.sql.gz
