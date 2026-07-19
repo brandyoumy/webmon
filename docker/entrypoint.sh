@@ -9,6 +9,7 @@ fi
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache public
 
+php artisan package:discover --ansi
 php artisan optimize:clear
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then

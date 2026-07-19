@@ -25,7 +25,8 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader \
     --no-interaction \
-    --no-progress
+    --no-progress \
+    --no-scripts
 
 FROM node:22-alpine AS assets
 
