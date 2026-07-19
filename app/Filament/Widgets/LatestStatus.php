@@ -20,28 +20,20 @@ class LatestStatus extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Website::with('latestLog')
-                ->whereHas('latestLog', function ($query) {
-                    $query->where('is_up', false); // Only websites that are down
-                })
-                ->orderByDesc(
-                    UptimeLogs::select('checked_at')
-                        ->whereColumn('websites.id', 'uptime_logs.websites_id')
-                        ->latest()
-                        ->limit(1)
-
-                )->limit(5)
+            ->query(fn (): Builder => Website::where('is_up', false)
+                ->orderByDesc('last_checked_at')
+                ->limit(5)
             )
             ->columns([
                 TextColumn::make('name')->label('Website Name'),
           
-                TextColumn::make('latestLog.checked_at')
+                TextColumn::make('last_checked_at')
                     ->label('Last Checked')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable(),
-                BadgeColumn::make('latestLog.is_up')
+                BadgeColumn::make('is_up')
                 ->label('Status')
-                ->getStateUsing(fn ($record) => $record->latestLog->is_up ? 'Up' : 'Down')
+                ->getStateUsing(fn ($record) => $record->is_up ? 'Up' : 'Down')
                 ->colors([
                     'success' => fn ($state) => $state === 'Up',
                     'danger' => fn ($state) => $state === 'Down',

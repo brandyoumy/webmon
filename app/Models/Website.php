@@ -16,7 +16,18 @@ class Website extends Model
         'company_name',
         'pic_email',
         'pic_phone',
-        'check_ssl'
+        'domain_expires_at',
+        'check_ssl',
+        'is_up',
+        'ssl_valid',
+        'last_checked_at',
+    ];
+    
+    protected $casts = [
+        'domain_expires_at' => 'date',
+        'is_up' => 'boolean',
+        'ssl_valid' => 'boolean',
+        'last_checked_at' => 'datetime',
     ];
 
     public function latestLog() : HasOne

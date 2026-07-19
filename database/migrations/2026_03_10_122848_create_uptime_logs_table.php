@@ -20,7 +20,9 @@ return new class extends Migration
             $table->boolean('ssl_valid')->nullable();
             $table->timestamp('checked_at');
             $table->timestamps(); 
-         
+            
+            $table->index(['websites_id', 'checked_at']);
+            $table->index('checked_at');
         });
     }
 

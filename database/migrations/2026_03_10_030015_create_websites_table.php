@@ -20,6 +20,10 @@ return new class extends Migration
             $table->string('pic_phone')->nullable();
             $table->boolean('check_ssl')->default(true);
             $table->integer('check_interval')->default(5);
+            $table->date('domain_expires_at')->nullable();
+            $table->boolean('is_up')->default(true);
+            $table->boolean('ssl_valid')->default(true);
+            $table->timestamp('last_checked_at')->nullable();
             $table->timestamps();
         });
     }

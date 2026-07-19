@@ -15,11 +15,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Admin User',
+            'username' => 'admin',
+            'email' => 'admin@example.com',
+            'access_level' => 'admin',
+        ]);
+
+        \App\Models\Website::create([
+            'name' => 'Google',
+            'url' => 'https://google.com',
+            'company_name' => 'Google LLC',
+            'check_ssl' => true,
+        ]);
+
+        \App\Models\Website::create([
+            'name' => 'GitHub',
+            'url' => 'https://github.com',
+            'company_name' => 'GitHub, Inc.',
+            'check_ssl' => true,
         ]);
     }
 }

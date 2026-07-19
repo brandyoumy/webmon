@@ -21,14 +21,8 @@ class LatestSSL extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Website::with('latestLog')
-                ->whereHas('latestLog', fn ($query) => $query->where('ssl_valid', false))
-                ->orderByDesc(
-                    UptimeLogs::select('checked_at')
-                        ->whereColumn('websites.id', 'uptime_logs.websites_id')
-                        ->latest()
-                        ->limit(1)
-                )
+            ->query(fn (): Builder => Website::where('ssl_valid', false)
+                ->orderByDesc('last_checked_at')
                 ->limit(5)
             )
             ->columns([
@@ -36,14 +30,14 @@ class LatestSSL extends TableWidget
                     ->label('Website Name')
                     ->sortable(),
 
-                TextColumn::make('latestLog.checked_at')
+                TextColumn::make('last_checked_at')
                     ->label('Last Checked')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable(),
 
-                BadgeColumn::make('latestLog.ssl_valid')
+                BadgeColumn::make('ssl_valid')
                     ->label('SSL Status')
-                    ->getStateUsing(fn ($record) => $record->latestLog->ssl_valid ? 'Valid' : 'Invalid')
+                    ->getStateUsing(fn ($record) => $record->ssl_valid ? 'Valid' : 'Invalid')
                     ->colors([
                         'success' => fn ($state) => $state === 'Valid',
                         'danger' => fn ($state) => $state === 'Invalid',

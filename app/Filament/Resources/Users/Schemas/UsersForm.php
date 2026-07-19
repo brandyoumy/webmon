@@ -14,7 +14,7 @@ class UsersForm
         return $schema
             ->components([
                 TextInput::make('username')->label('Username')
-                ->required()->unique(),
+                ->required()->unique(ignoreRecord: true),
                 TextInput::make('password')
                 ->label('Password')
                 ->password()

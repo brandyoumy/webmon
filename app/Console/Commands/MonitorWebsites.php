@@ -6,29 +6,48 @@ use App\Mail\WebsiteDownAlert;
 use App\Models\UptimeLogs;
 use App\Models\User;
 use App\Models\Website;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Mail;
 
 class MonitorWebsites extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'monitor:websites';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    
-    protected $description = 'Check all monitored websites and log status including SSL validity';
+    protected $description = 'Check all monitored websites and log status including SSL validity and domain expiry';
 
-    /**
-     * Execute the console command.
-     */
+    private array $whoisServers = [
+        'com'    => 'whois.verisign-grs.com',
+        'net'    => 'whois.verisign-grs.com',
+        'org'    => 'whois.pir.org',
+        'my'     => 'whois.mynic.my',
+        'io'     => 'whois.nic.io',
+        'co'     => 'whois.nic.co',
+        'uk'     => 'whois.nic.uk',
+        'sg'     => 'whois.sgnic.sg',
+        'edu'    => 'whois.educause.edu',
+        'info'   => 'whois.afilias.net',
+        'biz'    => 'whois.biz',
+        'dev'    => 'whois.nic.google',
+        'app'    => 'whois.nic.google',
+        'id'     => 'whois.id',
+        'au'     => 'whois.auda.org.au',
+        'jp'     => 'whois.jprs.jp',
+        'de'     => 'whois.denic.de',
+        'fr'     => 'whois.nic.fr',
+        'us'     => 'whois.nic.us',
+        'ca'     => 'whois.cira.ca',
+        'cn'     => 'whois.cnnic.cn',
+        'in'     => 'whois.registry.in',
+        'ru'     => 'whois.tcinet.ru',
+        'xyz'    => 'whois.nic.xyz',
+        'online' => 'whois.nic.online',
+        'store'  => 'whois.nic.store',
+        'tech'   => 'whois.nic.tech',
+        'site'   => 'whois.nic.site',
+        'cloud'  => 'whois.nic.cloud',
+    ];
+
     public function handle()
     {
         $sites = Website::all();
@@ -41,33 +60,33 @@ class MonitorWebsites extends Command
 
             $ch = curl_init();
             curl_setopt_array($ch, [
-                CURLOPT_URL => $site->url,
+                CURLOPT_URL            => $site->url,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 10,
+                CURLOPT_TIMEOUT        => 10,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_HEADER => true
+                CURLOPT_HEADER         => true,
             ]);
             curl_exec($ch);
 
-            $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $statusCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $responseTime = microtime(true) - $start;
 
             curl_close($ch);
 
             $sslValid = null;
 
-            if (str_starts_with($site->url, 'https')) {
+            if ($site->check_ssl && str_starts_with($site->url, 'https')) {
                 $host = parse_url($site->url, PHP_URL_HOST);
 
                 $contextOptions = [
-                    "ssl" => [
-                        "capture_peer_cert" => true,
-                        "verify_peer" => true,
-                        "verify_peer_name" => true,
-                        "SNI_enabled" => true,
-                        "peer_name" => $host
-                    ]
+                    'ssl' => [
+                        'capture_peer_cert' => true,
+                        'verify_peer'       => true,
+                        'verify_peer_name'  => true,
+                        'SNI_enabled'       => true,
+                        'peer_name'         => $host,
+                    ],
                 ];
 
                 $stream = @stream_socket_client(
@@ -80,102 +99,171 @@ class MonitorWebsites extends Command
                 );
 
                 if ($stream) {
-                    $params = stream_context_get_params($stream);
+                    $params   = stream_context_get_params($stream);
                     $peerCert = $params['options']['ssl']['peer_certificate'] ?? null;
 
                     if ($peerCert) {
                         $certInfo = openssl_x509_parse($peerCert);
-                        // SSL is valid if expiration time is in the future
                         $sslValid = isset($certInfo['validTo_time_t']) && $certInfo['validTo_time_t'] > time();
                     } else {
-                        $sslValid = false; // Could not get certificate
+                        $sslValid = false;
                     }
                 } else {
-                    $sslValid = false; // Could not connect SSL
+                    $sslValid = false;
                 }
             }
 
+            // Domain expiry via WHOIS
+            $domainExpiresAt      = $this->getDomainExpiry($site->url);
+            $domainExpiresInDays  = $domainExpiresAt ? (int) now()->diffInDays($domainExpiresAt, false) : null;
+            $domainExpiringSoon   = $domainExpiresInDays !== null && $domainExpiresInDays >= 0 && $domainExpiresInDays <= 30;
+
             $isUp = $statusCode >= 200 && $statusCode < 400;
 
-            // Log uptime
             UptimeLogs::create([
-                'websites_id' => $site->id,
-                'status_code' => $statusCode,
-                'response_time' => $responseTime,
-                'is_up' => $statusCode >= 200 && $statusCode < 400,
-                'ssl_valid' => $sslValid,
-                'checked_at' => now()
+                'websites_id'  => $site->id,
+                'status_code'  => $statusCode,
+                'response_time'=> $responseTime,
+                'is_up'        => $isUp,
+                'ssl_valid'    => $sslValid,
+                'checked_at'   => now(),
             ]);
 
-            // Always update check_ssl: true = valid, false = invalid or null
             $site->update([
-                'check_ssl' => $sslValid ?? false
+                'is_up'             => $isUp,
+                'ssl_valid'         => $sslValid ?? false,
+                'last_checked_at'   => now(),
+                'domain_expires_at' => $domainExpiresAt,
             ]);
 
-            // get latest log
-           // $lastLog = $site->latestLog;
-             $lastLog = UptimeLogs::where('websites_id', $site->id)
+            $lastLog = UptimeLogs::where('websites_id', $site->id)
                 ->orderBy('checked_at', 'desc')
                 ->skip(1)
                 ->first();
 
-         
-
-             // Determine if status changed
             $statusChanged = false;
             if ($lastLog) {
                 if ($lastLog->is_up !== $isUp || $lastLog->ssl_valid !== $sslValid) {
                     $statusChanged = true;
                 }
             } else {
-                // First run, consider it a status change
                 $statusChanged = true;
             }
 
-            if ($statusChanged) {
+            if ($statusChanged || $domainExpiringSoon) {
                 $alerts[] = [
-                    'site' => $site,
-                    'statusCode' => $statusCode,
-                    'sslValid' => $sslValid,
-                    'isUp' => $isUp
+                    'site'               => $site,
+                    'statusCode'         => $statusCode,
+                    'sslValid'           => $sslValid,
+                    'isUp'               => $isUp,
+                    'domainExpiresAt'    => $domainExpiresAt,
+                    'domainExpiringSoon' => $domainExpiringSoon,
+                    'domainExpiresInDays'=> $domainExpiresInDays,
                 ];
             }
 
-
-            /*
-                SEND EMAIL WHEN WEBSITE DOWN / SSL INVALID
-            */
-            // if(
-            //     (!$isUp && ($lastLog || $lastLog->is_up)) ||
-            //     ($sslValid === false && (!$lastLog || $lastLog->ssl_valid))
-            // )
-            // {
-            //     Mail::to($emails)->send(new WebsiteDownAlert($site, $statusCode, $sslValid));
-
-            // }
+            $domainLabel = $domainExpiresAt
+                ? $domainExpiresAt->format('Y-m-d') . " ({$domainExpiresInDays}d)"
+                : 'N/A';
 
             $this->info(
                 "Status: " . ($statusCode ?? 'N/A') .
-                " | SSL: " . ($sslValid === null ? 'Invalid' : ($sslValid ? 'Valid' : 'Invalid')) .
+                " | SSL: " . ($sslValid === null ? 'N/A' : ($sslValid ? 'Valid' : 'Invalid')) .
+                " | Domain Expiry: {$domainLabel}" .
                 " | Response: " . round($responseTime, 2) . "s"
             );
-
-
         }
 
-        
-        // Send a single email if there are any status changes
         if (!empty($alerts)) {
-            $emails = User::pluck('email')->toArray();
+            $activeEmails = \App\Models\NotificationEmail::where('is_active', true)->pluck('email')->toArray();
+            $emails = !empty($activeEmails) ? $activeEmails : User::pluck('email')->toArray();
+
             Mail::to($emails)->send(new WebsiteDownAlert($alerts));
             $this->info("Summary email sent to " . implode(', ', $emails));
-        }
-        else
-        {
+        } else {
             $this->info("No status changes detected. No email sent.");
-
         }
 
-        $this->info("Total websites with status changes: " . count($alerts));
+        $this->info("Total websites with alerts: " . count($alerts));
+    }
+
+    private function getDomainExpiry(string $url): ?Carbon
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) return null;
+
+        $domain = $this->extractRegistrableDomain($host);
+        if (!$domain) return null;
+
+        $tld         = substr($domain, strrpos($domain, '.') + 1);
+        $whoisServer = $this->whoisServers[$tld] ?? null;
+
+        if (!$whoisServer) return null;
+
+        $response = $this->queryWhois($domain, $whoisServer);
+        if (!$response) return null;
+
+        return $this->parseExpiryDate($response);
+    }
+
+    private function extractRegistrableDomain(string $host): ?string
+    {
+        $parts = explode('.', $host);
+        $count = count($parts);
+
+        if ($count < 2) return null;
+
+        $tld = $parts[$count - 1];
+        $sld = $parts[$count - 2];
+
+        // Handle ccSLDs like .com.my, .co.uk, .net.au, .org.uk
+        $ccSLDs = ['com', 'co', 'org', 'net', 'edu', 'gov', 'ac', 'sch', 'web'];
+        if (\strlen($tld) === 2 && \in_array($sld, $ccSLDs, true) && $count >= 3) {
+            return $parts[$count - 3] . '.' . $sld . '.' . $tld;
+        }
+
+        return $sld . '.' . $tld;
+    }
+
+    private function queryWhois(string $domain, string $server): ?string
+    {
+        $socket = @fsockopen($server, 43, $errno, $errstr, 10);
+        if (!$socket) return null;
+
+        stream_set_timeout($socket, 10);
+        fwrite($socket, $domain . "\r\n");
+
+        $response = '';
+        while (!feof($socket)) {
+            $response .= fread($socket, 4096);
+        }
+        fclose($socket);
+
+        return $response ?: null;
+    }
+
+    private function parseExpiryDate(string $response): ?Carbon
+    {
+        $patterns = [
+            '/Registry Expiry Date:\s*(.+)/i',
+            '/Registrar Registration Expiration Date:\s*(.+)/i',
+            '/Expir(?:y|ation) Date:\s*(.+)/i',
+            '/Domain Expiration Date:\s*(.+)/i',
+            '/paid-till:\s*(.+)/i',
+            '/expires:\s*(.+)/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $response, $matches)) {
+                $dateStr = trim($matches[1]);
+                try {
+                    return Carbon::parse($dateStr);
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        return null;
     }
 }
