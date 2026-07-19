@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('uptime_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('websites_id')->constrained('websites');
+            $table->foreignId('websites_id')->constrained('websites')->cascadeOnDelete();
             $table->integer('status_code')->nullable();
             $table->float('response_time')->nullable();
             $table->boolean('is_up')->default(false);

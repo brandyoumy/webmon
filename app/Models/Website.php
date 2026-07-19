@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Website extends Model
 {
@@ -30,9 +31,21 @@ class Website extends Model
         'last_checked_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function ($website) {
+            $website->uptimeLogs()->delete();
+        });
+    }
+
+    public function uptimeLogs() : HasMany
+    {
+        return $this->hasMany(UptimeLogs::class, 'websites_id');
+    }
+
     public function latestLog() : HasOne
     {
         return $this->hasOne(UptimeLogs::class,'websites_id')
-        ->latestOfMany('checked_at');
+            ->latestOfMany('checked_at');
     }
 }
