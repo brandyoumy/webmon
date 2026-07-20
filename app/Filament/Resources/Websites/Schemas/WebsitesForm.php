@@ -27,7 +27,7 @@ class WebsitesForm
 
                  TextInput::make('name')
                 ->required()
-                ->label('Website Name'),
+                ->label('Client Name'),
 
                 TextInput::make('company_name')
                 ->label('Company'),
@@ -42,6 +42,28 @@ class WebsitesForm
                     TextInput::make('pic_phone')
                     ->tel()
                     ->label('Phone No')
+                    ->placeholder('e.g. +6012-345 6789')
+                    ->prefixIcon('heroicon-o-phone')
+                    ->helperText('Formats to international standard on save (e.g. 012-345 6789 becomes +60123456789).')
+                    ->dehydrateStateUsing(function ($state) {
+                        if (!$state) {
+                            return null;
+                        }
+                        // Remove all non-digit characters except +
+                        $cleaned = preg_replace('/[^\d+]/', '', $state);
+                        
+                        // If it starts with 0, replace with +60 (Malaysia country code)
+                        if (str_starts_with($cleaned, '0')) {
+                            $cleaned = '+60' . substr($cleaned, 1);
+                        }
+                        
+                        // If it doesn't start with +, add it (assuming it's a country code now)
+                        if ($cleaned !== '' && !str_starts_with($cleaned, '+')) {
+                            $cleaned = '+' . $cleaned;
+                        }
+                        
+                        return $cleaned;
+                    })
                     ->columnSpan(6)
                 ])->columns(12),
 

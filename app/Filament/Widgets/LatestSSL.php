@@ -27,7 +27,7 @@ class LatestSSL extends TableWidget
             )
             ->columns([
                 TextColumn::make('name')
-                    ->label('Website Name')
+                    ->label('Client Name')
                     ->sortable(),
 
                 TextColumn::make('last_checked_at')

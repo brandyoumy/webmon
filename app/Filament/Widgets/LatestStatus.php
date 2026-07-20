@@ -25,7 +25,7 @@ class LatestStatus extends TableWidget
                 ->limit(5)
             )
             ->columns([
-                TextColumn::make('name')->label('Website Name'),
+                TextColumn::make('name')->label('Client Name'),
           
                 TextColumn::make('last_checked_at')
                     ->label('Last Checked')
