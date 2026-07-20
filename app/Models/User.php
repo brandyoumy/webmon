@@ -16,7 +16,10 @@ class User extends Authenticatable implements FilamentUser  // Add implements
         'name',
         'email',
         'password',
-        'access_level'
+        'access_level',
+        'two_factor_secret',
+        'two_factor_confirmed_at',
+        'two_factor_recovery_codes',
     ];
 
     protected $hidden = [
@@ -29,6 +32,7 @@ class User extends Authenticatable implements FilamentUser  // Add implements
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 
