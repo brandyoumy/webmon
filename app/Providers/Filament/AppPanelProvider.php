@@ -57,6 +57,10 @@ class AppPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
+            ->routes(function () {
+                \Illuminate\Support\Facades\Route::get('/two-factor-verify', \App\Filament\Pages\Auth\TwoFactorVerify::class)
+                    ->name('pages.two-factor-verify');
+            })
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 LatestStatus::class,
