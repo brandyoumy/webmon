@@ -40,6 +40,13 @@ class WebsitesForm
                 ->placeholder('Select a package')
                 ->searchable()
                 ->preload(),
+
+                Select::make('server_id')
+                ->relationship('server', 'name')
+                ->label('Server')
+                ->placeholder('Select a server')
+                ->searchable()
+                ->preload(),
                 
                 Fieldset::make('Person In Charge')
                 ->schema([

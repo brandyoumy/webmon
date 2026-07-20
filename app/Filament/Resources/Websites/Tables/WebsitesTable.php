@@ -31,6 +31,8 @@ class WebsitesTable
 
                 TextColumn::make('product.name')->label('Package')->searchable()->sortable(),
 
+                TextColumn::make('server.name')->label('Server')->searchable()->sortable(),
+
                 TextColumn::make('pic_phone')
                     ->label('WhatsApp')
                     ->searchable()

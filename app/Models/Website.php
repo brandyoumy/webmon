@@ -17,6 +17,7 @@ class Website extends Model
         'url',
         'company_name',
         'product_id',
+        'server_id',
         'remark',
         'pic_email',
         'pic_phone',
@@ -55,5 +56,10 @@ class Website extends Model
     public function product() : BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function server() : BelongsTo
+    {
+        return $this->belongsTo(Server::class);
     }
 }
