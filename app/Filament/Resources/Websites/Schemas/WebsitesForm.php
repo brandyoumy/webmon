@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Websites\Schemas;
 
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
@@ -31,6 +32,9 @@ class WebsitesForm
 
                 TextInput::make('company_name')
                 ->label('Company'),
+
+                TextInput::make('package')
+                ->label('Package'),
                 
                 Fieldset::make('Person In Charge')
                 ->schema([
@@ -66,6 +70,10 @@ class WebsitesForm
                     })
                     ->columnSpan(6)
                 ])->columns(12),
+
+                Textarea::make('remark')
+                ->label('Remark')
+                ->rows(3),
 
             ]);
     }

@@ -29,6 +29,8 @@ class WebsitesTable
 
                 TextColumn::make('company_name')->label('Company')->searchable()->sortable(),
 
+                TextColumn::make('package')->label('Package')->searchable()->sortable(),
+
                 TextColumn::make('pic_phone')
                     ->label('WhatsApp')
                     ->searchable()
@@ -88,6 +90,11 @@ class WebsitesTable
                         return $days <= 30 ? 'danger' : 'success';
                     })
                     ->sortable(),
+
+                TextColumn::make('remark')
+                    ->label('Remark')
+                    ->limit(50)
+                    ->searchable(),
             ])
             ->filters([
                 SelectFilter::make('website_status')

@@ -15,6 +15,8 @@ class Website extends Model
         'name',
         'url',
         'company_name',
+        'package',
+        'remark',
         'pic_email',
         'pic_phone',
         'domain_expires_at',
