@@ -3,13 +3,13 @@
 namespace App\Filament\Pages\Auth;
 
 use Filament\Forms\Components\TextInput;
-use Filament\Pages\Page;
+use Filament\Pages\SimplePage;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Google2FA;
 
-class TwoFactorVerify extends Page
+class TwoFactorVerify extends SimplePage
 {
     protected static ?string $title = 'Two-Factor Verification';
 
