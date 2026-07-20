@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Websites\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -33,8 +34,12 @@ class WebsitesForm
                 TextInput::make('company_name')
                 ->label('Company'),
 
-                TextInput::make('package')
-                ->label('Package'),
+                Select::make('product_id')
+                ->relationship('product', 'name')
+                ->label('Package')
+                ->placeholder('Select a package')
+                ->searchable()
+                ->preload(),
                 
                 Fieldset::make('Person In Charge')
                 ->schema([

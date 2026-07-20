@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,7 +16,7 @@ class Website extends Model
         'name',
         'url',
         'company_name',
-        'package',
+        'product_id',
         'remark',
         'pic_email',
         'pic_phone',
@@ -49,5 +50,10 @@ class Website extends Model
     {
         return $this->hasOne(UptimeLogs::class,'websites_id')
             ->latestOfMany('checked_at');
+    }
+
+    public function product() : BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

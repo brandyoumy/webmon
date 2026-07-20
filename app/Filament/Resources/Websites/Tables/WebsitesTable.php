@@ -29,7 +29,7 @@ class WebsitesTable
 
                 TextColumn::make('company_name')->label('Company')->searchable()->sortable(),
 
-                TextColumn::make('package')->label('Package')->searchable()->sortable(),
+                TextColumn::make('product.name')->label('Package')->searchable()->sortable(),
 
                 TextColumn::make('pic_phone')
                     ->label('WhatsApp')
