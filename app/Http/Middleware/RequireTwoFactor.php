@@ -11,18 +11,30 @@ class RequireTwoFactor
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip Livewire background requests to avoid blocking AJAX updates
+        if ($request->routeIs('livewire.*')) {
+            return $next($request);
+        }
+
         $user = Auth::user();
 
-        // If the user has confirmed 2FA setup but is not verified for this session
-        if ($user && $user->two_factor_secret && $user->two_factor_confirmed_at) {
+        if ($user) {
             $currentRoute = $request->route() ? $request->route()->getName() : '';
 
-            // Allow access to the 2FA verification page and logout route, redirect other routes
-            if ($currentRoute !== 'filament.app.pages.two-factor-verify' &&
-                $currentRoute !== 'filament.app.auth.logout' &&
-                !session()->get('two_factor_verified')) {
-                
-                return redirect()->route('filament.app.pages.two-factor-verify');
+            // Case 1: User has NOT set up / confirmed 2FA yet. Force them to settings.
+            if (!$user->two_factor_secret || !$user->two_factor_confirmed_at) {
+                if ($currentRoute !== 'filament.app.pages.two-factor-settings' &&
+                    $currentRoute !== 'filament.app.auth.logout') {
+                    return redirect()->route('filament.app.pages.two-factor-settings');
+                }
+            } 
+            // Case 2: User has configured 2FA but is not verified for this session.
+            else {
+                if ($currentRoute !== 'filament.app.pages.two-factor-verify' &&
+                    $currentRoute !== 'filament.app.auth.logout' &&
+                    !session()->get('two_factor_verified')) {
+                    return redirect()->route('filament.app.pages.two-factor-verify');
+                }
             }
         }
 

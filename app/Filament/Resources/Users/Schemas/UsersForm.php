@@ -6,6 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Validation\Rules\Password;
 
 class UsersForm
 {
@@ -20,7 +21,9 @@ class UsersForm
                 ->password()
                 ->revealable()
                 ->required(fn ($context) => $context === 'create')
-                ->dehydrated(fn ($state) => filled($state)),
+                ->dehydrated(fn ($state) => filled($state))
+                ->rule(Password::min(8)->letters()->mixedCase()->numbers()->symbols())
+                ->nullable(),
                 TextInput::make('name')->label('Full Name')->required(),
                 TextInput::make('email')->email()->label("Email")->required(),
                 Select::make('access_level')->label('Roles')->options([
