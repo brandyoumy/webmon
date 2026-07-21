@@ -95,7 +95,7 @@ class ProductsTable
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $filePath = Storage::disk('public')->path($data['file']);
+                        $filePath = Storage::path($data['file']);
 
                         if (($handle = fopen($filePath, 'r')) !== false) {
                             $bom = fread($handle, 3);
@@ -121,7 +121,7 @@ class ProductsTable
 
                             if ($nameIdx === false || $priceIdx === false) {
                                 fclose($handle);
-                                Storage::disk('public')->delete($data['file']);
+                                Storage::delete($data['file']);
                                 Notification::make()
                                     ->title('Import Failed')
                                     ->body('CSV must contain at least "Product Name" and "Price" columns.')
@@ -169,7 +169,7 @@ class ProductsTable
                             }
 
                             fclose($handle);
-                            Storage::disk('public')->delete($data['file']);
+                            Storage::delete($data['file']);
 
                             Notification::make()
                                 ->title('Import Completed')

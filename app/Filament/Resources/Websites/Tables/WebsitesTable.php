@@ -204,7 +204,7 @@ class WebsitesTable
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $filePath = Storage::disk('public')->path($data['file']);
+                        $filePath = Storage::path($data['file']);
 
                         if (($handle = fopen($filePath, 'r')) !== false) {
                             $bom = fread($handle, 3);
@@ -232,7 +232,7 @@ class WebsitesTable
 
                             if ($urlIdx === false || $nameIdx === false) {
                                 fclose($handle);
-                                Storage::disk('public')->delete($data['file']);
+                                Storage::delete($data['file']);
                                 Notification::make()
                                     ->title('Import Failed')
                                     ->body('CSV must contain at least "Client Name" and "URL" columns.')
@@ -300,7 +300,7 @@ class WebsitesTable
                             }
 
                             fclose($handle);
-                            Storage::disk('public')->delete($data['file']);
+                            Storage::delete($data['file']);
 
                             Notification::make()
                                 ->title('Import Completed')
