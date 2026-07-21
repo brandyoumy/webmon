@@ -66,6 +66,7 @@ class MonitorWebsites extends Command
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_HEADER         => true,
+                CURLOPT_USERAGENT      => 'BrandYou-Webmon/1.0 (+https://webmon.brandyou.my)',
             ]);
             curl_exec($ch);
 
