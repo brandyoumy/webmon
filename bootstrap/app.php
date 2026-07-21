@@ -98,7 +98,7 @@ namespace {
             health: '/up',
         )
         ->withMiddleware(function (Middleware $middleware): void {
-            //
+            $middleware->trustProxies(at: '*');
         })
         ->withExceptions(function (Exceptions $exceptions): void {
             //
