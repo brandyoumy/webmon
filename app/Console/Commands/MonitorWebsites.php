@@ -50,7 +50,7 @@ class MonitorWebsites extends Command
 
     public function handle()
     {
-        $sites = Website::all();
+        $sites = Website::activeWebsites()->get();
         $alerts = [];
 
         foreach ($sites as $site) {

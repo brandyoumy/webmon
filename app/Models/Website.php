@@ -62,4 +62,21 @@ class Website extends Model
     {
         return $this->belongsTo(Server::class);
     }
+
+    public function scopeEmailHosting($query)
+    {
+        return $query->whereHas('product', function ($q) {
+            $q->where('name', 'like', '%Email Hosting%');
+        });
+    }
+
+    public function scopeActiveWebsites($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('product_id')
+              ->orWhereHas('product', function ($sub) {
+                  $sub->where('name', 'not like', '%Email Hosting%');
+              });
+        });
+    }
 }
