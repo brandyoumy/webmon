@@ -8,11 +8,15 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class WebsitesTable
 {
@@ -179,6 +183,133 @@ class WebsitesTable
                         };
 
                         return response()->streamDownload($callback, 'all-websites-' . now()->format('Y-m-d') . '.csv', $headers);
+                    }),
+
+                Action::make('import_csv')
+                    ->label('Import from CSV')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('info')
+                    ->form([
+                        FileUpload::make('file')
+                            ->label('CSV File')
+                            ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
+                            ->required(),
+                        Radio::make('duplicate_behavior')
+                            ->label('If Duplicate URLs Found')
+                            ->options([
+                                'skip' => 'Skip the duplicate row',
+                                'overwrite' => 'Overwrite existing data with CSV values',
+                            ])
+                            ->default('skip')
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        $filePath = Storage::disk('public')->path($data['file']);
+
+                        if (($handle = fopen($filePath, 'r')) !== false) {
+                            $bom = fread($handle, 3);
+                            if ($bom !== chr(0xEF) . chr(0xBB) . chr(0xBF)) {
+                                rewind($handle);
+                            }
+
+                            $headers = fgetcsv($handle, 1000, ',');
+                            if (!$headers) {
+                                fclose($handle);
+                                Notification::make()->title('Invalid CSV file structure.')->danger()->send();
+                                return;
+                            }
+
+                            $headers = array_map(fn($h) => strtolower(trim($h)), $headers);
+
+                            $nameIdx = array_search('client name', $headers);
+                            $urlIdx = array_search('url', $headers);
+                            $companyIdx = array_search('company', $headers);
+                            $packageIdx = array_search('package', $headers);
+                            $serverIdx = array_search('server', $headers);
+                            $whatsappIdx = array_search('whatsapp', $headers);
+                            $emailIdx = array_search('pic email', $headers);
+                            $remarkIdx = array_search('remark', $headers);
+
+                            if ($urlIdx === false || $nameIdx === false) {
+                                fclose($handle);
+                                Storage::disk('public')->delete($data['file']);
+                                Notification::make()
+                                    ->title('Import Failed')
+                                    ->body('CSV must contain at least "Client Name" and "URL" columns.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            $imported = 0;
+                            $updated = 0;
+                            $skipped = 0;
+                            $behavior = $data['duplicate_behavior'];
+
+                            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                                $url = trim($row[$urlIdx] ?? '');
+                                $name = trim($row[$nameIdx] ?? '');
+
+                                if (empty($url) || empty($name)) {
+                                    $skipped++;
+                                    continue;
+                                }
+
+                                $existing = \App\Models\Website::where('url', $url)->first();
+
+                                $productId = null;
+                                if ($packageIdx !== false && !empty($row[$packageIdx])) {
+                                    $packageName = trim($row[$packageIdx]);
+                                    $product = \App\Models\Product::where('name', $packageName)->first();
+                                    if ($product) {
+                                        $productId = $product->id;
+                                    }
+                                }
+
+                                $serverId = null;
+                                if ($serverIdx !== false && !empty($row[$serverIdx])) {
+                                    $serverName = trim($row[$serverIdx]);
+                                    $server = \App\Models\Server::where('name', $serverName)->first();
+                                    if ($server) {
+                                        $serverId = $server->id;
+                                    }
+                                }
+
+                                $recordData = [
+                                    'name' => $name,
+                                    'company_name' => $companyIdx !== false ? trim($row[$companyIdx] ?? '') : null,
+                                    'product_id' => $productId,
+                                    'server_id' => $serverId,
+                                    'pic_phone' => $whatsappIdx !== false ? trim($row[$whatsappIdx] ?? '') : null,
+                                    'pic_email' => $emailIdx !== false ? trim($row[$emailIdx] ?? '') : null,
+                                    'remark' => $remarkIdx !== false ? trim($row[$remarkIdx] ?? '') : null,
+                                ];
+
+                                if ($existing) {
+                                    if ($behavior === 'skip') {
+                                        $skipped++;
+                                    } else {
+                                        $existing->update($recordData);
+                                        $updated++;
+                                    }
+                                } else {
+                                    $recordData['url'] = $url;
+                                    \App\Models\Website::create($recordData);
+                                    $imported++;
+                                }
+                            }
+
+                            fclose($handle);
+                            Storage::disk('public')->delete($data['file']);
+
+                            Notification::make()
+                                ->title('Import Completed')
+                                ->body("Successfully imported: {$imported} new, updated: {$updated}, skipped: {$skipped} records.")
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()->title('Could not open the uploaded file.')->danger()->send();
+                        }
                     }),
             ])
             ->recordActions([
