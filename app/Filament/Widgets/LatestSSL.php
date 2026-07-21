@@ -21,7 +21,7 @@ class LatestSSL extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Website::where('ssl_valid', false)
+            ->query(fn (): Builder => Website::activeWebsites()->where('check_ssl', true)->where('ssl_valid', false)
                 ->orderByDesc('last_checked_at')
                 ->limit(5)
             )

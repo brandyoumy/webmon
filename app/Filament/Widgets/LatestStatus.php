@@ -20,7 +20,7 @@ class LatestStatus extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Website::where('is_up', false)
+            ->query(fn (): Builder => Website::activeWebsites()->where('is_up', false)
                 ->orderByDesc('last_checked_at')
                 ->limit(5)
             )
