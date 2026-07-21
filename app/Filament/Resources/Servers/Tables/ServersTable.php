@@ -26,7 +26,8 @@ class ServersTable
                     ->sortable(),
 
                 TextColumn::make('ip_address')
-                    ->label('IP Address')
+                    ->label('IP Address(es)')
+                    ->badge()
                     ->searchable()
                     ->sortable(),
 
@@ -71,7 +72,7 @@ class ServersTable
                             foreach ($records as $record) {
                                 fputcsv($file, [
                                     $record->name,
-                                    $record->ip_address,
+                                    is_array($record->ip_address) ? implode(', ', $record->ip_address) : $record->ip_address,
                                     $record->provider,
                                     $record->description,
                                     $record->created_at?->format('Y-m-d H:i:s') ?? 'N/A'
@@ -142,7 +143,8 @@ class ServersTable
 
                             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                                 $name = trim($row[$nameIdx] ?? '');
-                                $ipAddress = $ipIdx !== false ? trim($row[$ipIdx] ?? '') : null;
+                                $ipAddressString = $ipIdx !== false ? trim($row[$ipIdx] ?? '') : '';
+                                $ipAddress = array_filter(array_map('trim', explode(',', $ipAddressString)));
 
                                 if (empty($name)) {
                                     $skipped++;
@@ -155,7 +157,9 @@ class ServersTable
                                     $existing = \App\Models\Server::where('name', $name)->first();
                                 }
                                 if (!$existing && !empty($ipAddress)) {
-                                    $existing = \App\Models\Server::where('ip_address', $ipAddress)->first();
+                                    $existing = \App\Models\Server::all()->first(function ($server) use ($ipAddress) {
+                                        return count(array_intersect($server->ip_address ?? [], $ipAddress)) > 0;
+                                    });
                                 }
 
                                 $recordData = [
@@ -221,7 +225,7 @@ class ServersTable
                                 foreach ($records as $record) {
                                     fputcsv($file, [
                                         $record->name,
-                                        $record->ip_address,
+                                        is_array($record->ip_address) ? implode(', ', $record->ip_address) : $record->ip_address,
                                         $record->provider,
                                         $record->description,
                                         $record->created_at?->format('Y-m-d H:i:s') ?? 'N/A'

@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\Servers\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class ServerForm
@@ -17,10 +18,23 @@ class ServerForm
                     ->label('Server Name')
                     ->placeholder('e.g. Production VPS'),
 
-                TextInput::make('ip_address')
-                    ->label('IP Address')
-                    ->placeholder('e.g. 192.168.1.1')
-                    ->ip(),
+                TagsInput::make('ip_address')
+                    ->label('IP Address(es)')
+                    ->placeholder('e.g. 192.168.1.1 (press Enter)')
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if (! is_array($value)) {
+                                    return;
+                                }
+                                foreach ($value as $ip) {
+                                    if (! filter_var($ip, FILTER_VALIDATE_IP)) {
+                                        $fail("The IP address '{$ip}' is invalid.");
+                                    }
+                                }
+                            };
+                        },
+                    ]),
 
                 TextInput::make('provider')
                     ->label('Provider')
