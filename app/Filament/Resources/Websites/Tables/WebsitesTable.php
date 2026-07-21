@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Websites\Tables;
 
 use App\Models\UptimeLogs;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -125,12 +127,115 @@ class WebsitesTable
                         default    => $query,
                     }),
             ])
+            ->headerActions([
+                Action::make('export_all')
+                    ->label('Export All to CSV')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(function () {
+                        $records = \App\Models\Website::with(['product', 'server'])->get();
+                        
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => 'attachment; filename="all-websites.csv"',
+                        ];
+
+                        $callback = function () use ($records) {
+                            $file = fopen('php://output', 'w');
+                            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                            
+                            fputcsv($file, [
+                                'Client Name',
+                                'URL',
+                                'Company',
+                                'Package',
+                                'Server',
+                                'WhatsApp',
+                                'PIC Email',
+                                'Uptime Status',
+                                'SSL Status',
+                                'Domain Expires At',
+                                'Last Checked At',
+                                'Remark'
+                            ]);
+                            
+                            foreach ($records as $record) {
+                                fputcsv($file, [
+                                    $record->name,
+                                    $record->url,
+                                    $record->company_name,
+                                    $record->product?->name ?? 'N/A',
+                                    $record->server?->name ?? 'N/A',
+                                    $record->pic_phone,
+                                    $record->pic_email,
+                                    $record->is_up ? 'Up' : 'Down',
+                                    $record->ssl_valid ? 'Valid' : 'Expired/Invalid',
+                                    $record->domain_expires_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                                    $record->last_checked_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                                    $record->remark
+                                ]);
+                            }
+                            fclose($file);
+                        };
+
+                        return response()->streamDownload($callback, 'all-websites-' . now()->format('Y-m-d') . '.csv', $headers);
+                    }),
+            ])
             ->recordActions([
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('export_selected')
+                        ->label('Export Selected to CSV')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $headers = [
+                                'Content-Type' => 'text/csv',
+                                'Content-Disposition' => 'attachment; filename="websites-export.csv"',
+                            ];
+
+                            $callback = function () use ($records) {
+                                $file = fopen('php://output', 'w');
+                                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                                
+                                fputcsv($file, [
+                                    'Client Name',
+                                    'URL',
+                                    'Company',
+                                    'Package',
+                                    'Server',
+                                    'WhatsApp',
+                                    'PIC Email',
+                                    'Uptime Status',
+                                    'SSL Status',
+                                    'Domain Expires At',
+                                    'Last Checked At',
+                                    'Remark'
+                                ]);
+                                
+                                foreach ($records as $record) {
+                                    fputcsv($file, [
+                                        $record->name,
+                                        $record->url,
+                                        $record->company_name,
+                                        $record->product?->name ?? 'N/A',
+                                        $record->server?->name ?? 'N/A',
+                                        $record->pic_phone,
+                                        $record->pic_email,
+                                        $record->is_up ? 'Up' : 'Down',
+                                        $record->ssl_valid ? 'Valid' : 'Expired/Invalid',
+                                        $record->domain_expires_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                                        $record->last_checked_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                                        $record->remark
+                                    ]);
+                                }
+                                fclose($file);
+                            };
+
+                            return response()->streamDownload($callback, 'websites-export-' . now()->format('Y-m-d') . '.csv', $headers);
+                        }),
                 ]),
             ]);
     }
