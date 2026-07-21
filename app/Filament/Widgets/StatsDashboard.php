@@ -13,23 +13,23 @@ class StatsDashboard extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $upWebsite = Website::where('is_up', true)->count();
-        $downWebsite = Website::where('is_up', false)->count();
+        $upWebsite = Website::activeWebsites()->where('is_up', true)->count();
+        $downWebsite = Website::activeWebsites()->where('is_up', false)->count();
 
-        $activeSSL   = Website::where('ssl_valid', true)->count();
-        $inactiveSSL = Website::where('ssl_valid', false)->count();
+        $activeSSL   = Website::activeWebsites()->where('ssl_valid', true)->count();
+        $inactiveSSL = Website::activeWebsites()->where('ssl_valid', false)->count();
 
         $upUrl = WebsitesResource::getUrl('index') . '?'
-            . http_build_query(['filters' => ['website_status' => ['value' => 'up']]]);
+            . http_build_query(['tableFilters' => ['website_status' => ['value' => 'up']]]);
 
         $downUrl = WebsitesResource::getUrl('index') . '?'
-            . http_build_query(['filters' => ['website_status' => ['value' => 'down']]]);
+            . http_build_query(['tableFilters' => ['website_status' => ['value' => 'down']]]);
 
         $activeSslUrl = WebsitesResource::getUrl('index') . '?'
-            . http_build_query(['filters' => ['ssl_status' => ['value' => 'active']]]);
+            . http_build_query(['tableFilters' => ['ssl_status' => ['value' => 'active']]]);
 
         $inactiveSslUrl = WebsitesResource::getUrl('index') . '?'
-            . http_build_query(['filters' => ['ssl_status' => ['value' => 'inactive']]]);
+            . http_build_query(['tableFilters' => ['ssl_status' => ['value' => 'inactive']]]);
 
         return [
             Stat::make('Active Websites', $upWebsite)
