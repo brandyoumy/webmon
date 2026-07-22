@@ -23,12 +23,13 @@ class LatestSSL extends TableWidget
         return $table
             ->query(fn (): Builder => Website::activeWebsites()->where('check_ssl', true)->where('ssl_valid', false)
                 ->orderByDesc('last_checked_at')
-                ->limit(5)
             )
             ->columns([
-                TextColumn::make('name')
-                    ->label('Client Name')
-                    ->sortable(),
+                TextColumn::make('url')
+                    ->label('Website URL')
+                    ->url(fn ($record) => $record->url)
+                    ->openUrlInNewTab()
+                    ->searchable(),
 
                 TextColumn::make('last_checked_at')
                     ->label('Last Checked')
@@ -43,6 +44,7 @@ class LatestSSL extends TableWidget
                         'danger' => fn ($state) => $state === 'Invalid',
                     ]),
             ])
+            ->extraAttributes(['style' => 'max-height: 450px; overflow-y: auto;'])
             ->paginated(false)
             ->filters([])
             ->headerActions([])

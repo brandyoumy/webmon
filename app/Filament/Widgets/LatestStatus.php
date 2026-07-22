@@ -22,10 +22,13 @@ class LatestStatus extends TableWidget
         return $table
             ->query(fn (): Builder => Website::activeWebsites()->where('is_up', false)
                 ->orderByDesc('last_checked_at')
-                ->limit(5)
             )
             ->columns([
-                TextColumn::make('name')->label('Client Name'),
+                TextColumn::make('url')
+                    ->label('Website URL')
+                    ->url(fn ($record) => $record->url)
+                    ->openUrlInNewTab()
+                    ->searchable(),
           
                 TextColumn::make('last_checked_at')
                     ->label('Last Checked')
@@ -39,6 +42,7 @@ class LatestStatus extends TableWidget
                     'danger' => fn ($state) => $state === 'Down',
                 ]),
             ])
+            ->extraAttributes(['style' => 'max-height: 450px; overflow-y: auto;'])
             ->paginated(false)
             ->filters([
                 //
