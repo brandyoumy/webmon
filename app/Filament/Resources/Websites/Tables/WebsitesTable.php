@@ -368,6 +368,8 @@ class WebsitesTable
                             return response()->streamDownload($callback, 'websites-export-' . now()->format('Y-m-d') . '.csv', $headers);
                         }),
                 ]),
-            ]);
+            ])
+            ->defaultPaginationPageOption(20)
+            ->paginationPageOptions([10, 20, 25, 50, 100]);
     }
 }

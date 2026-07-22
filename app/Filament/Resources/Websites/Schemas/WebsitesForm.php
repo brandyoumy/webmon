@@ -21,6 +21,7 @@ class WebsitesForm
                 TextInput::make('url')
                 ->url()
                 ->required()
+                ->unique(ignoreRecord: true)
                 ->label('Website Url'),
 
                 Toggle::make('check_ssl')

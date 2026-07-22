@@ -65,7 +65,9 @@ class NotificationEmailResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultPaginationPageOption(20)
+            ->paginationPageOptions([10, 20, 25, 50, 100]);
     }
 
     public static function getPages(): array

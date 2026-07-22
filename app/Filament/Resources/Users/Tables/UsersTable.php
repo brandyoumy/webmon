@@ -29,6 +29,8 @@ class UsersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultPaginationPageOption(20)
+            ->paginationPageOptions([10, 20, 25, 50, 100]);
     }
 }
