@@ -49,6 +49,7 @@ class AppPanelProvider extends PanelProvider
             ->plugin(FilamentNordThemePlugin::make())
             ->sidebarCollapsibleOnDesktop()
             ->login(CustomLogin::class)
+            ->passwordReset()
             ->colors([
                 'primary' => Color::Blue,
             ])
